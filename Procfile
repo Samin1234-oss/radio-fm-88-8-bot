@@ -1,0 +1,1 @@
+worker: python radio_fm_88_8_bot.py
