@@ -92,6 +92,14 @@ async def leave(ctx):
     else:
         await ctx.send("❌ I'm not in a voice channel.")
 
+@bot.command()
+async def ffmpeg_test(ctx):
+    import shutil
+    if shutil.which("ffmpeg"):
+        await ctx.send("✅ FFmpeg is installed!")
+    else:
+        await ctx.send("❌ FFmpeg is missing!")
+
 # Lease command (custom)
 @bot.command()
 async def lease(ctx):
@@ -99,4 +107,5 @@ async def lease(ctx):
 
 # Run bot
 bot.run(TOKEN)
+
 
