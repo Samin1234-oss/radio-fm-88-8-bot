@@ -3,96 +3,58 @@ from discord.ext import commands
 import os
 from dotenv import load_dotenv
 
+# Load token from .env
 load_dotenv()
-
 TOKEN = os.getenv("TOKEN")
 
-# Set intents
+# Enable intents for commands (default is fine for voice)
 intents = discord.Intents.default()
-intents.message_content = True
-intents.voice_states = True
-
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# FM Stream URL
+# Radio stream URL
 STREAM_URL = "https://radio.garden/api/ara/content/listen/2MrE9uJ6/channel.mp3"
 
-# ===== EVENTS =====
 @bot.event
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
 
-# ===== COMMANDS =====
-
+# Join command
 @bot.command()
 async def join(ctx):
     if ctx.author.voice is None:
-        await ctx.send("❌ Join a voice channel first!")
+        await ctx.send("⚠️ You must be in a voice channel first!")
         return
     channel = ctx.author.voice.channel
-    if ctx.voice_client is None or not ctx.voice_client.is_connected():
+    if ctx.voice_client is not None:
+        await ctx.voice_client.move_to(channel)
+    else:
         await channel.connect()
-        await ctx.send(f"✅ Joined {channel.name}")
-    else:
-        await ctx.send("❌ I'm already in a voice channel!")
+    await ctx.send(f"✅ Joined {channel}")
 
-@bot.command()
-async def leave(ctx):
-    if ctx.voice_client:
-        await ctx.voice_client.disconnect()
-        await ctx.send("⏹️ Left the voice channel.")
-    else:
-        await ctx.send("❌ I'm not in a voice channel.")
-
+# Play command
 @bot.command()
 async def play(ctx):
-    if ctx.author.voice is None:
-        await ctx.send("❌ Join a voice channel first!")
-        return
-    if ctx.voice_client is None or not ctx.voice_client.is_connected():
-        vc = await ctx.author.voice.channel.connect()
+    if ctx.voice_client is None:
+        if ctx.author.voice is None:
+            await ctx.send("⚠️ Join a voice channel first!")
+            return
+        channel = ctx.author.voice.channel
+        vc = await channel.connect()
     else:
         vc = ctx.voice_client
 
-    if not vc.is_playing():
-        # Use the local ffmpeg binary
-        vc.play(discord.FFmpegPCMAudio(STREAM_URL))
-        await ctx.send("📻 Playing FM 88.8")
-    else:
-        await ctx.send("❌ Already playing!")
+    # Play the radio stream
+    vc.stop()
+    vc.play(discord.FFmpegPCMAudio(STREAM_URL, executable="./ffmpeg"))
+    await ctx.send("📻 Playing FM 88.8")
 
+# Leave command
 @bot.command()
-async def stop(ctx):
-    if ctx.voice_client and ctx.voice_client.is_playing():
-        ctx.voice_client.stop()
-        await ctx.send("⏹️ Stopped playing.")
+async def leave(ctx):
+    if ctx.voice_client is not None:
+        await ctx.voice_client.disconnect()
+        await ctx.send("👋 Left the voice channel")
     else:
-        await ctx.send("❌ Nothing is playing.")
+        await ctx.send("⚠️ I am not in a voice channel")
 
-@bot.command()
-async def pause(ctx):
-    if ctx.voice_client and ctx.voice_client.is_playing():
-        ctx.voice_client.pause()
-        await ctx.send("⏸️ Paused.")
-    else:
-        await ctx.send("❌ Nothing is playing to pause.")
-
-@bot.command()
-async def resume(ctx):
-    if ctx.voice_client and ctx.voice_client.is_paused():
-        ctx.voice_client.resume()
-        await ctx.send("▶️ Resumed.")
-    else:
-        await ctx.send("❌ Nothing is paused.")
-
-@bot.command()
-async def ffmpeg_test(ctx):
-    import shutil
-    if shutil.which("./ffmpeg"):
-        await ctx.send("✅ FFmpeg binary found!")
-    else:
-        await ctx.send("❌ FFmpeg binary missing!")
-
-# ===== RUN BOT =====
 bot.run(TOKEN)
-
