@@ -56,7 +56,7 @@ async def play(ctx):
 
     if not vc.is_playing():
         # Use the local ffmpeg binary
-        vc.play(discord.FFmpegPCMAudio(STREAM_URL, executable="./ffmpeg"))
+        vc.play(discord.FFmpegPCMAudio(STREAM_URL))
         await ctx.send("📻 Playing FM 88.8")
     else:
         await ctx.send("❌ Already playing!")
@@ -95,3 +95,4 @@ async def ffmpeg_test(ctx):
 
 # ===== RUN BOT =====
 bot.run(TOKEN)
+
