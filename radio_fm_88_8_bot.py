@@ -83,6 +83,15 @@ async def resume(ctx):
     else:
         await ctx.send("❌ Nothing is paused!")
 
+#Leave Command
+@bot.command()
+async def leave(ctx):
+    if ctx.voice_client:
+        await ctx.voice_client.disconnect()
+        await ctx.send("⏹️ Left the channel.")
+    else:
+        await ctx.send("❌ I'm not in a voice channel.")
+
 # Lease command (custom)
 @bot.command()
 async def lease(ctx):
@@ -90,3 +99,4 @@ async def lease(ctx):
 
 # Run bot
 bot.run(TOKEN)
+
